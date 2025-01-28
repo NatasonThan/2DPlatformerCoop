@@ -9,13 +9,20 @@ public class Player : MonoBehaviour
     [Header("Movement")]
     [SerializeField] private float moveSpeed;
     [SerializeField] private float jumpForce;
+    [SerializeField] private float doubleJumpForce;
+
+    private bool canDoubleJump;
 
     [Header("Collision info")]
     [SerializeField] private float groundCheckDistance;
+    [SerializeField] private float wallCheckDistance;
     [SerializeField] private LayerMask whatIsGround;
     private bool isGrounded;
+    private bool isAirborne;
+    private bool isWallDetected;
 
     private float xInput;
+    private float yInput;
 
     private bool facingRight = true;
     private int facingDir = 1;
@@ -26,27 +33,80 @@ public class Player : MonoBehaviour
     }
     private void Update()
     {
+        UpdateAirBorneStatus();
 
-        HandleCollision();
+        HandleWallSlide();
         HandleInput();
         HandleMovement();
         HandleFlip();
+        HandleCollision();
         HandleAnimations();
     }
+
+    private void HandleWallSlide()
+    {
+        bool canWallSlide = isWallDetected && rb.linearVelocity.y < 0;
+        float yModifer = yInput < 0 ? 1 : .05f;
+
+        if (canWallSlide == false)
+            return;
+
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * yModifer);
+    }
+
+    private void UpdateAirBorneStatus()
+    {
+        if (isGrounded && isAirborne)
+            HandleLanding();
+
+        if (!isGrounded && !isAirborne)
+            BecomeAirBorne();
+    }
+
+    private void BecomeAirBorne()
+    {
+        isAirborne = true;
+    }
+
+    private void HandleLanding()
+    {
+        isAirborne = false;
+        canDoubleJump = true;
+    }
+
     private void HandleInput()
     {
         xInput = Input.GetAxisRaw("Horizontal");
+        yInput = Input.GetAxisRaw("Vertical");
 
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            JumpButton();
+        }
+    }
+    private void JumpButton() 
+    {
+        if (isGrounded) 
         {
             Jump();
+        }
+
+        else if (canDoubleJump) 
+        {
+            DoubleJump();
         }
     }
 
     private void Jump() => rb.linearVelocity = new Vector2(rb.linearVelocityX, jumpForce);
+    private void DoubleJump() 
+    {
+        canDoubleJump = false;
+        rb.linearVelocity = new Vector2 (rb.linearVelocityX, doubleJumpForce);
+    }
     private void HandleCollision()
     {
         isGrounded = Physics2D.Raycast(transform.position, Vector2.down, groundCheckDistance, whatIsGround);
+        isWallDetected = Physics2D.Raycast(transform.position, Vector2.right * facingDir, wallCheckDistance, whatIsGround);
     }
 
     private void HandleAnimations()
@@ -54,16 +114,19 @@ public class Player : MonoBehaviour
         anim.SetFloat("xVelocity", rb.linearVelocityX);
         anim.SetFloat("yVelocity", rb.linearVelocityY);
         anim.SetBool("isGrounded", isGrounded);
+        anim.SetBool("isWallDetected", isWallDetected);
     }
 
     private void HandleMovement()
     {
+        if (isWallDetected)
+            return;
         rb.linearVelocity = new Vector2(xInput * moveSpeed, rb.linearVelocityY);
     }
 
     private void HandleFlip()
     {
-        if (rb.linearVelocityX < 0 && facingRight || rb.linearVelocityX > 0 && !facingRight) 
+        if (xInput < 0 && facingRight || xInput > 0 && !facingRight) 
         {
             Flip();
         }
@@ -79,5 +142,6 @@ public class Player : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.DrawLine(transform.position, new Vector2(transform.position.x, transform.position.y - groundCheckDistance));
+        Gizmos.DrawLine(transform.position, new Vector2(transform.position.x + (wallCheckDistance * facingDir), transform.position.y));
     }
 }
