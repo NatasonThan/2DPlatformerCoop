@@ -1,11 +1,14 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class Player : MonoBehaviour
 {
     private Rigidbody2D rb;
     private Animator anim;
+    private Controls playerInput;
+    private Vector2 moveInput;
 
     [Header("Movement")]
     [SerializeField] private float moveSpeed;
@@ -37,9 +40,6 @@ public class Player : MonoBehaviour
     private bool isAirborne;
     private bool isWallDetected;
 
-    private float xInput;
-    private float yInput;
-
     private bool facingRight = true;
     private int facingDir = 1;
 
@@ -47,8 +47,26 @@ public class Player : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponentInChildren<Animator>();
-    }
 
+        playerInput = new Controls();
+    }
+    private void OnEnable()
+    {
+        playerInput.Enable();
+
+        playerInput.Player.Jump.performed += ctx => JumpButton();
+        playerInput.Player.Move.performed += ctx => moveInput = ctx.ReadValue<Vector2>();
+        playerInput.Player.Move.canceled += ctx => moveInput = Vector2.zero;
+
+    }
+    private void OnDisable()
+    {
+        playerInput.Disable();
+
+        playerInput.Player.Jump.performed -= ctx => JumpButton();
+        playerInput.Player.Move.performed -= ctx => moveInput = ctx.ReadValue<Vector2>();
+        playerInput.Player.Move.canceled -= ctx => moveInput = Vector2.zero;
+    }
     private void Update()
     {
         UpdateAirBorneStatus();
@@ -57,7 +75,7 @@ public class Player : MonoBehaviour
             return;
 
         HandleWallSlide();
-        HandleInput();
+        //HandleInput();
         HandleMovement();
         HandleFlip();
         HandleCollision();
@@ -86,7 +104,7 @@ public class Player : MonoBehaviour
     private void HandleWallSlide()
     {
         bool canWallSlide = isWallDetected && rb.linearVelocity.y < 0;
-        float yModifer = yInput < 0 ? 1 : .05f;
+        float yModifer = moveInput.y < 0 ? 1 : .05f;
 
         if (canWallSlide == false)
             return;
@@ -119,7 +137,7 @@ public class Player : MonoBehaviour
         AttemptBufferJump();
     }
 
-    private void HandleInput()
+    /*private void HandleInput()
     {
         xInput = Input.GetAxisRaw("Horizontal");
         yInput = Input.GetAxisRaw("Vertical");
@@ -129,7 +147,7 @@ public class Player : MonoBehaviour
             JumpButton();
             RequestBufferjump();
         }
-    }
+    }*/
 
     private void RequestBufferjump() 
     {
@@ -215,12 +233,12 @@ public class Player : MonoBehaviour
         if (isWallJumping)
             return;
 
-        rb.linearVelocity = new Vector2(xInput * moveSpeed, rb.linearVelocityY);
+        rb.linearVelocity = new Vector2(moveInput.x * moveSpeed, rb.linearVelocityY);
     }
 
     private void HandleFlip()
     {
-        if (xInput < 0 && facingRight || xInput > 0 && !facingRight) 
+        if (moveInput.x < 0 && facingRight || moveInput.x > 0 && !facingRight) 
         {
             Flip();
         }
