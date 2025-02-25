@@ -6,6 +6,8 @@ public class GameManager : MonoBehaviour
 
     public Player player;
 
+    [Header("Fruit Management")]
+    public bool fruitsHaveRandomLook;
     public int fruitCollected;
 
     private void Awake()
@@ -17,4 +19,5 @@ public class GameManager : MonoBehaviour
     }
 
     public void AddFruit() => fruitCollected++;
+    public bool FruitsHaveRandomLook() => fruitsHaveRandomLook;
 }
