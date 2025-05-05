@@ -33,7 +33,7 @@ public class Fruit : MonoBehaviour
     private void UpdateFruitVisuals() => anim.SetFloat("fruitIndex", (int)fruitType); 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        Player player = collision.GetComponent<Player>();
+        PlayerManager player = collision.GetComponent<PlayerManager>();
 
         if (player != null) 
         {

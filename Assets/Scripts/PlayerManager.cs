@@ -3,17 +3,21 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class Player : MonoBehaviour
+public class PlayerManager : MonoBehaviour
 {
     private Rigidbody2D rb;
     private Animator anim;
+    private CapsuleCollider2D cd;
     private Controls playerInput;
     private Vector2 moveInput;
+
+    private bool canBeControlled = false;
 
     [Header("Movement")]
     [SerializeField] private float moveSpeed;
     [SerializeField] private float jumpForce;
     [SerializeField] private float doubleJumpForce;
+    private float defaultGravityScale;
     private bool canDoubleJump;
 
     [Header("Buffer Jump & Coyote jump")]
@@ -43,12 +47,21 @@ public class Player : MonoBehaviour
     private bool facingRight = true;
     private int facingDir = 1;
 
+    [Header("VFX")]
+    [SerializeField] private GameObject deathVfx;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        cd = GetComponent<CapsuleCollider2D>();
         anim = GetComponentInChildren<Animator>();
 
         playerInput = new Controls();
+    }
+    private void Start()
+    {
+        defaultGravityScale = rb.gravityScale;
+        RespawnFinished(false);
     }
     private void OnEnable()
     {
@@ -71,6 +84,13 @@ public class Player : MonoBehaviour
     {
         UpdateAirBorneStatus();
 
+        if (canBeControlled == false) 
+        {
+            HandleCollision();
+            HandleAnimations();
+            return;
+        }
+
         if(isKnocked)
             return;
 
@@ -80,8 +100,25 @@ public class Player : MonoBehaviour
         HandleFlip();
         HandleCollision();
         HandleAnimations();
+
+        RespawnFinished(true);
     }
 
+    public void RespawnFinished(bool finished) 
+    {
+        if (finished)
+        {
+            rb.gravityScale = defaultGravityScale;
+            canBeControlled = true;
+            cd.enabled = true;
+        }
+        else 
+        {
+            defaultGravityScale = rb.gravityScale;
+            canBeControlled = false;
+            cd.enabled = false;
+        }
+    }
     public void KnockBack() 
     {
         if (isKnocked)
@@ -99,6 +136,29 @@ public class Player : MonoBehaviour
         yield return new WaitForSeconds(knockbackDuration);
 
         isKnocked = false;
+    }
+
+    public void Die() 
+    {
+        GameObject newDeathVfx = Instantiate(deathVfx, transform.position, Quaternion.identity);
+        Destroy(gameObject);
+    }
+
+    public void Push(Vector2 direction, float duration = 0) 
+    {
+        StartCoroutine(PushCouroutine(direction, duration));
+    }
+
+    private IEnumerator PushCouroutine(Vector2 direction, float duration) 
+    {
+        canBeControlled = false;
+
+        rb.linearVelocity = Vector2.zero;
+        rb.AddForce(direction, ForceMode2D.Impulse);
+
+        yield return new WaitForSeconds(duration);
+
+        canBeControlled = true;
     }
 
     private void HandleWallSlide()

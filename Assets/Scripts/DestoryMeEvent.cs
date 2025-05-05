@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class FruitPickupVFX : MonoBehaviour
+public class DestoryMeEvent : MonoBehaviour
 {
     public void DestoryMe() => Destroy(gameObject);
 }

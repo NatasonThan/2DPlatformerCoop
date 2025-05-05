@@ -121,13 +121,14 @@ MonoBehaviour:
   coyoteJumpWindow: 0.2
   wallJumpDuration: 0
   wallJumpForce: {x: 7, y: 14}
-  knockbackDuration: 0.7
+  knockbackDuration: 0.5
   knockbackForce: {x: 5, y: 7}
   groundCheckDistance: 0.75
   wallCheckDistance: 0.75
   whatIsGround:
     serializedVersion: 2
     m_Bits: 8
+  deathVfx: {fileID: 4834599504052793576, guid: 1d6462d30e5e44d49aa702aca46e50d4, type: 3}
 --- !u!114 &7794167892375629477
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -217,6 +218,7 @@ GameObject:
   - component: {fileID: 8864403918140061696}
   - component: {fileID: 4726390088346553373}
   - component: {fileID: 3714306799588467091}
+  - component: {fileID: 1294741014279781536}
   m_Layer: 0
   m_Name: Animator
   m_TagString: Untagged
@@ -316,3 +318,15 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1294741014279781536
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8294953816463298350}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fcbf378bb0673942b478809658eb529, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

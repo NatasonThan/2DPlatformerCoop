@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -15,7 +14,7 @@ public class ClientSingleton : MonoBehaviour
 
             if (instance == null)
             {
-                Debug.LogError("No ClientSingleton in the scene!");
+                //Debug.LogError("No ClientSingleton in the scene!");
                 return null;
             }
             return instance;
