@@ -5,6 +5,11 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
 
+    private UI_Ingame inGameUI;
+
+    [Header("Level Managment")]
+    [SerializeField] private float levelTimer;
+
     [Header("Player")]
     [SerializeField] private GameObject playerPrefab;
     /*[SerializeField] private Transform respawnPoint;
@@ -28,13 +33,23 @@ public class GameManager : MonoBehaviour
     }
     private void Start()
     {
+        inGameUI = UI_Ingame.instance;
         CollectedFruitsInfo();
+        SetTimeOpen();
+    }
+    private void Update()
+    {
+        levelTimer = Time.time;
+
+        inGameUI.UpdateTimerUI(levelTimer);
     }
 
     private void CollectedFruitsInfo()
     {
         Fruit[] allFruits = FindObjectsByType<Fruit>(FindObjectsSortMode.None);
         totalFruits = allFruits.Length;
+
+        inGameUI.UpdateFruitUI(fruitCollected, totalFruits);
     }
 
     /*public void RespawnPlayer() 
@@ -52,7 +67,11 @@ public class GameManager : MonoBehaviour
         player = newPlayer.GetComponent<PlayerManager>();
     }*/
 
-    public void AddFruit() => fruitCollected++;
+    public void AddFruit() 
+    {
+        fruitCollected++;
+        inGameUI.UpdateFruitUI(fruitCollected, totalFruits);
+    }
     public bool FruitsHaveRandomLook() => fruitsHaveRandomLook;
 
     public void CreatObject(GameObject prepab, Transform target, float delay = 0) 
@@ -67,5 +86,13 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(delay);
 
         GameObject newObject = Instantiate(prefab, newPosition, Quaternion.identity);
+    }
+
+    private void SetTimeOpen() 
+    {
+        Time.timeScale = 1;
+        levelTimer = 0;
+        levelTimer = Time.time;
+        inGameUI.UpdateTimerUI(levelTimer);
     }
 }

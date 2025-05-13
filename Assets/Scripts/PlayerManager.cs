@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class PlayerManager : MonoBehaviour
 {
@@ -40,6 +42,11 @@ public class PlayerManager : MonoBehaviour
     [SerializeField] private float groundCheckDistance;
     [SerializeField] private float wallCheckDistance;
     [SerializeField] private LayerMask whatIsGround;
+    [Space]
+    [SerializeField] private Transform enemyCheck;
+    [SerializeField] private float enemyCheckRadius;
+    [SerializeField] private LayerMask whatIsEnemy;
+
     private bool isGrounded;
     private bool isAirborne;
     private bool isWallDetected;
@@ -94,6 +101,7 @@ public class PlayerManager : MonoBehaviour
         if(isKnocked)
             return;
 
+        HandleEnemyDetection();
         HandleWallSlide();
         //HandleInput();
         HandleMovement();
@@ -102,6 +110,24 @@ public class PlayerManager : MonoBehaviour
         HandleAnimations();
 
         RespawnFinished(true);
+    }
+
+    private void HandleEnemyDetection() 
+    {
+        if (rb.linearVelocity.y >= 0)
+            return;
+
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(enemyCheck.position, enemyCheckRadius, whatIsEnemy);
+
+        foreach (var enemy in colliders) 
+        {
+            Enemy newEnemy = enemy.GetComponent<Enemy>();
+            if (newEnemy != null) 
+            {
+                newEnemy.Die();
+;               Jump();
+            }
+        }
     }
 
     public void RespawnFinished(bool finished) 
@@ -124,6 +150,7 @@ public class PlayerManager : MonoBehaviour
         if (isKnocked)
             return;
 
+        AudioManager.instance.PlaySFX(9);
         StartCoroutine(KnockbackRoutine());
         anim.SetTrigger("knockBack");
         rb.linearVelocity = new Vector2 (knockbackForce.x * -facingDir, knockbackForce.y);
@@ -140,8 +167,16 @@ public class PlayerManager : MonoBehaviour
 
     public void Die() 
     {
+        AudioManager.instance.PlaySFX(0);
+
         GameObject newDeathVfx = Instantiate(deathVfx, transform.position, Quaternion.identity);
-        Destroy(gameObject);
+
+        NetworkObject netObj = GetComponent<NetworkObject>();
+
+        if (!netObj.IsOwner) 
+        {
+            netObj.Despawn();
+        }
     }
 
     public void Push(Vector2 direction, float duration = 0) 
@@ -247,15 +282,22 @@ public class PlayerManager : MonoBehaviour
         CancelCoyoteJump();
     }
 
-    private void Jump() => rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+    private void Jump()
+    {
+        AudioManager.instance.PlaySFX(3);
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+    }
+
     private void DoubleJump() 
     {
+        AudioManager.instance.PlaySFX(3);
         isWallJumping = false;
         canDoubleJump = false;
         rb.linearVelocity = new Vector2 (rb.linearVelocity.x, doubleJumpForce);
     }
     private void WallJump() 
     {
+        AudioManager.instance.PlaySFX(12);
         canDoubleJump = true;
         rb.linearVelocity = new Vector2(rb.linearVelocity.x * -facingDir, wallJumpForce.y);
         Flip();
@@ -313,6 +355,7 @@ public class PlayerManager : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        Gizmos.DrawSphere(enemyCheck.position, enemyCheckRadius);
         Gizmos.DrawLine(transform.position, new Vector2(transform.position.x, transform.position.y - groundCheckDistance));
         Gizmos.DrawLine(transform.position, new Vector2(transform.position.x + (wallCheckDistance * facingDir), transform.position.y));
     }

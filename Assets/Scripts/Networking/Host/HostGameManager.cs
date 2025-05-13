@@ -23,7 +23,7 @@ public class HostGameManager : IDisposable
     public string JoinCode { get; private set; }
     public NetworkServer NetworkServer { get; private set; }
 
-    private const int MaxConnections = 20;
+    private const int MaxConnections = 2;
     private const string GameSceneName = "Game";
 
     public HostGameManager(NetworkObject playerPrefab)

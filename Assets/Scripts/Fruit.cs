@@ -31,13 +31,14 @@ public class Fruit : MonoBehaviour
         anim.SetFloat("fruitIndex", randowIndex);
     }
     private void UpdateFruitVisuals() => anim.SetFloat("fruitIndex", (int)fruitType); 
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnTriggerEnter2D(Collider2D collision) 
     {
         PlayerManager player = collision.GetComponent<PlayerManager>();
 
         if (player != null) 
         {
             gameManager.AddFruit();
+            AudioManager.instance.PlaySFX(7);
             Destroy(gameObject);
 
             GameObject newFx = Instantiate(pickupVfx,transform.position,Quaternion.identity);
