@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class EnemyMushroom : Enemy
 {
@@ -47,9 +47,13 @@ public class EnemyMushroom : Enemy
     public override void Die()
     {
         base.Die();
-
         cd.enabled = false;
+        if (!IsServer)
+        {
+            RequestDieServerRpc();
+        }
     }
+
 
     /*public void OnTriggerEnter2D(Collider2D collider)
     {

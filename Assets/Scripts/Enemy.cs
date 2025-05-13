@@ -1,6 +1,7 @@
+﻿using Unity.Netcode;
 using UnityEngine;
 
-public class Enemy : MonoBehaviour
+public class Enemy : NetworkBehaviour
 {
     protected Animator anim;
     protected Rigidbody2D rb;
@@ -45,6 +46,18 @@ public class Enemy : MonoBehaviour
 
     public virtual void Die()
     {
+        if (IsServer)
+        {
+            DieClientRpc();
+            Destroy(gameObject, 3f);
+        }
+    }
+
+    [ClientRpc]
+    private void DieClientRpc()
+    {
+        if (isDead) return;
+
         damageTrigger.SetActive(false);
         anim.SetTrigger("hit");
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, deathImpactSpeed);
@@ -53,9 +66,13 @@ public class Enemy : MonoBehaviour
         AudioManager.instance.PlaySFX(9);
 
         if (Random.Range(0, 100) < 50)
-            deathRotationDirection = deathRotationDirection - 1;
+            deathRotationDirection--;
+    }
 
-        Destroy(gameObject, 5f);
+    [ServerRpc(RequireOwnership = false)]
+    public void RequestDieServerRpc()
+    {
+        Die();
     }
 
     private void HandleDeathRotation() 
